@@ -1,12 +1,8 @@
-# entity/Parameter.py
-
 class Parameter:
 
-    def __init__(
-            self,
-            uploadPath,
-            defaultVisibility):
+    def __init__(self, parameterid, photoid, name, value):
 
-        self.uploadPath = uploadPath
-
-        self.defaultVisibility = defaultVisibility
+        self.parameterid = parameterid
+        self.photoid = photoid
+        self.name = name
+        self.value = value

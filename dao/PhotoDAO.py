@@ -1,11 +1,13 @@
 import sqlite3
 from entity.Photo import Photo
+from dao.ParameterDAO import ParameterDAO
 
 
 class PhotoDAO:
 
     def __init__(self):
         self.conn = sqlite3.connect("database/photo.db")
+        self.parameterDao = ParameterDAO()
 
     def insertPhoto(self, photo):
 
@@ -24,6 +26,8 @@ class PhotoDAO:
 
         self.conn.commit()
 
+        return cursor.lastrowid
+
     def findByUser(self, userid):
 
         cursor = self.conn.cursor()
@@ -36,10 +40,23 @@ class PhotoDAO:
 
         rows = cursor.fetchall()
 
-        return [
-            Photo(row[0], row[1], row[2], row[3], row[4])
-            for row in rows
-        ]
+        photos = []
+
+        for row in rows:
+            parameters = self.parameterDao.findByPhoto(row[0])
+
+            photo = Photo(
+                row[0],
+                row[1],
+                row[2],
+                row[3],
+                row[4],
+                parameters
+            )
+
+            photos.append(photo)
+
+        return photos
 
     def findPublic(self):
 
@@ -53,10 +70,23 @@ class PhotoDAO:
 
         rows = cursor.fetchall()
 
-        return [
-            Photo(row[0], row[1], row[2], row[3], row[4])
-            for row in rows
-        ]
+        photos = []
+
+        for row in rows:
+            parameters = self.parameterDao.findByPhoto(row[0])
+
+            photo = Photo(
+                row[0],
+                row[1],
+                row[2],
+                row[3],
+                row[4],
+                parameters
+            )
+
+            photos.append(photo)
+
+        return photos
 
     def deletePhoto(self, pid):
 

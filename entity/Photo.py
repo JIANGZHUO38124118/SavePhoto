@@ -7,7 +7,7 @@ class Photo:
             filepath,
             visibility,
             owner,
-            parameter):
+            parameter=None):
 
         self.photoid = photoid
         self.filename = filename

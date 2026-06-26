@@ -7,26 +7,53 @@ from entity.Parameter import Parameter
 class ParameterDAO:
 
     def __init__(self):
+        self.conn = sqlite3.connect("database/photo.db")
 
-        self.conn = sqlite3.connect(
-            "database/photo.db"
-        )
-
-    def getParameter(self):
-
+    def insertParameter(self, parameter):
         cursor = self.conn.cursor()
 
         cursor.execute(
             '''
-            SELECT *
-            FROM parameter
-            LIMIT 1
+            INSERT INTO parameter(photoid, name, value)
+            VALUES (?, ?, ?)
+            ''',
+            (
+                parameter.photoid,
+                parameter.name,
+                parameter.value
+            )
+        )
+
+        self.conn.commit()
+
+    def findByPhoto(self, photoid):
+        cursor = self.conn.cursor()
+
+        cursor.execute(
             '''
+            SELECT parameterid, photoid, name, value
+            FROM parameter
+            WHERE photoid = ?
+            ''',
+            (photoid,)
         )
 
-        row = cursor.fetchone()
+        rows = cursor.fetchall()
 
-        return Parameter(
-            row[1],
-            row[2]
+        return [
+            Parameter(row[0], row[1], row[2], row[3])
+            for row in rows
+        ]
+
+    def deleteByPhoto(self, photoid):
+        cursor = self.conn.cursor()
+
+        cursor.execute(
+            '''
+            DELETE FROM parameter
+            WHERE photoid = ?
+            ''',
+            (photoid,)
         )
+
+        self.conn.commit()
