@@ -1,12 +1,12 @@
-# # entity/Parameter.py
+# entity/Parameter.py
 
-# class Parameter:
+class Parameter:
 
-#     def __init__(
-#             self,
-#             uploadPath,
-#             defaultVisibility):
+    def __init__(
+            self,
+            uploadPath,
+            defaultVisibility):
 
-#         self.uploadPath = uploadPath
+        self.uploadPath = uploadPath
 
-#         self.defaultVisibility = defaultVisibility
+        self.defaultVisibility = defaultVisibility

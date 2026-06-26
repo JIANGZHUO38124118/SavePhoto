@@ -1,32 +1,32 @@
-# # dao/ParameterDAO.py
+# dao/ParameterDAO.py
 
-# import sqlite3
-# from entity.Parameter import Parameter
+import sqlite3
+from entity.Parameter import Parameter
 
 
-# class ParameterDAO:
+class ParameterDAO:
 
-#     def __init__(self):
+    def __init__(self):
 
-#         self.conn = sqlite3.connect(
-#             "database/photo.db"
-#         )
+        self.conn = sqlite3.connect(
+            "database/photo.db"
+        )
 
-#     def getParameter(self):
+    def getParameter(self):
 
-#         cursor = self.conn.cursor()
+        cursor = self.conn.cursor()
 
-#         cursor.execute(
-#             '''
-#             SELECT *
-#             FROM parameter
-#             LIMIT 1
-#             '''
-#         )
+        cursor.execute(
+            '''
+            SELECT *
+            FROM parameter
+            LIMIT 1
+            '''
+        )
 
-#         row = cursor.fetchone()
+        row = cursor.fetchone()
 
-#         return Parameter(
-#             row[1],
-#             row[2]
-#         )
+        return Parameter(
+            row[1],
+            row[2]
+        )
