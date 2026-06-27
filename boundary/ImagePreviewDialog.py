@@ -3,21 +3,21 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap, QKeyEvent
 from PyQt5.QtCore import Qt
 from control.ShowService import ShowService
-
+ 
 class ImagePreviewDialog(QDialog):
-
+ 
     def __init__(self, photos, index, user, mode="community", parent=None):
         super().__init__(parent)
         self.photos = photos
         self.index = index
         self.user = user
-        self.mode = mode 
+        self.mode = mode
         self.service = ShowService()
-
+ 
         self.setWindowTitle("Image Detailed View")
         self.resize(950, 650)
         self.setFocusPolicy(Qt.StrongFocus)
-
+ 
         self.imageLabel = QLabel()
         self.imageLabel.setAlignment(Qt.AlignCenter)
         self.imageLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -34,14 +34,14 @@ class ImagePreviewDialog(QDialog):
         
         self.paramTitle = QLabel("<b>[ Technical Parameters ]</b>")
         self.paramText = QTextEdit()
-        self.paramText.setReadOnly(True) 
-        self.paramText.setFixedWidth(240) 
+        self.paramText.setReadOnly(True)
+        self.paramText.setFixedWidth(240)
         self.paramText.setFocusPolicy(Qt.NoFocus)
-
+ 
         self.editParamBtn = QPushButton("Edit Parameters")
         self.statusBtn = QPushButton("Make Public")
         self.statusBtn.setStyleSheet("font-weight: bold;")
-
+ 
         mainLayout = QHBoxLayout()
         
         leftLayout = QVBoxLayout()
@@ -52,31 +52,31 @@ class ImagePreviewDialog(QDialog):
         socialLayout.addSpacing(30)
         socialLayout.addWidget(self.likesLabel)
         socialLayout.addSpacing(15)
-        socialLayout.addWidget(self.likeBtn) 
-        socialLayout.addStretch() 
+        socialLayout.addWidget(self.likeBtn)
+        socialLayout.addStretch()
         leftLayout.addLayout(socialLayout)
-
+ 
         rightLayout = QVBoxLayout()
-        rightLayout.addWidget(self.titleLabel) 
+        rightLayout.addWidget(self.titleLabel)
         rightLayout.addSpacing(15)
         rightLayout.addWidget(self.paramTitle)
         rightLayout.addWidget(self.paramText, 1) 
-        rightLayout.addWidget(self.editParamBtn) 
+        rightLayout.addWidget(self.editParamBtn)
         rightLayout.addWidget(self.statusBtn)
         
         mainLayout.addLayout(leftLayout, 1) 
         mainLayout.addLayout(rightLayout)
         self.setLayout(mainLayout)
-
+ 
         self.updateContent()
-
+ 
         self.likeBtn.clicked.connect(self.doLike)
         self.editParamBtn.clicked.connect(self.doEditParam)
         self.statusBtn.clicked.connect(self.doToggleStatus)
-
+ 
     def updateContent(self):
         photo = self.photos[self.index]
-
+ 
         if self.mode == "community":
             self.likeBtn.show()
             self.editParamBtn.hide()
@@ -89,7 +89,7 @@ class ImagePreviewDialog(QDialog):
             is_user_liked = cursor.fetchone() is not None
             cursor.close()
             conn.close()
-
+ 
             if is_user_liked:
                 self.likeBtn.setText("Liked")
             else:
@@ -98,12 +98,12 @@ class ImagePreviewDialog(QDialog):
             self.likeBtn.hide()
             self.editParamBtn.show()
             self.statusBtn.show()
-
+ 
             if photo.isPublic():
                 self.statusBtn.setText("Set to Private")
             else:
                 self.statusBtn.setText("Set to Public")
-
+ 
         self.titleLabel.setText(f"<b>File Name:</b><br>{photo.filename}")
         
         pixmap = QPixmap(photo.filepath)
@@ -111,18 +111,18 @@ class ImagePreviewDialog(QDialog):
             self.imageLabel.setPixmap(pixmap.scaled(920, 820, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         else:
             self.imageLabel.setText("Failed to load image.")
-
+ 
         if hasattr(photo, 'owner_account') and photo.owner_account:
             self.publisherLabel.setText(f"<b>Publisher:</b> {photo.owner_account}")
         else:
             self.publisherLabel.setText("<b>Publisher:</b> My Storage")
-
+ 
         likes = getattr(photo, 'likes_count', 0)
         self.likesLabel.setText(f"<b>Likes:</b> {likes}")
-
+ 
         self.refreshParamText(photo)
         self.setFocus()
-
+ 
     def refreshParamText(self, photo):
         param_info = ""
         if photo.parameter:
@@ -131,7 +131,7 @@ class ImagePreviewDialog(QDialog):
         else:
             param_info = "No technical parameters found for this photo."
         self.paramText.setPlainText(param_info)
-
+ 
     def doToggleStatus(self):
         photo = self.photos[self.index]
         from entity.PhotoVisibility import PhotoVisibility
@@ -148,7 +148,7 @@ class ImagePreviewDialog(QDialog):
                 QMessageBox.information(self, "Success", "Photo is now Public.")
         
         self.updateContent()
-
+ 
     def doLike(self):
         photo = self.photos[self.index]
         is_liked, message = self.service.toggleLikePhoto(self.user.userid, photo.photoid)
@@ -156,32 +156,15 @@ class ImagePreviewDialog(QDialog):
             photo.likes_count = photo.likes_count + 1 if is_liked else photo.likes_count - 1
         QMessageBox.information(self, "Notice", message)
         self.updateContent()
-
+ 
     def doEditParam(self):
         photo = self.photos[self.index]
-        if not photo.parameter:
-            QMessageBox.information(self, "Notice", "This photo has no parameters to edit.")
-            return
-
-        keys = [p.key for p in photo.parameter]
-        key, ok1 = QInputDialog.getItem(self, "Select Parameter", "Which parameter do you want to change?", keys, 0, False)
+        from boundary.UploadForm import UploadForm
         
-        if ok1 and key:
-            old_value = next((p.value for p in photo.parameter if p.key == key), "")
-            new_value, ok2 = QInputDialog.getText(self, f"Edit {key}", f"Enter new value for {key}:", text=old_value)
-            
-            if ok2 and new_value.strip():
-                success = self.service.updatePhotoParameter(photo.photoid, key, new_value.strip())
-                if success:
-                    QMessageBox.information(self, "Success", f"{key} updated successfully!")
-                    for p in photo.parameter:
-                        if p.key == key:
-                            p.value = new_value.strip()
-                            break
-                    self.refreshParamText(photo)
-                else:
-                    QMessageBox.critical(self, "Error", "Failed to update parameter.")
-
+        self.upload_form = UploadForm(parent=self, user=self.user, photo=photo)
+        self.hide()
+        self.upload_form.show()
+ 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key_Left and self.index > 0:
             self.index -= 1

@@ -1,65 +1,58 @@
 # dao/ParameterDAO.py
-
 import sqlite3
 from entity.Parameter import Parameter
-
-
+ 
 class ParameterDAO:
-
-    def __init__(self):
-        self.conn = sqlite3.connect("database/photo.db")
-
+ 
+    def get_conn(self):
+        return sqlite3.connect("database/photo.db")
+ 
     def insertParameter(self, parameter):
-        cursor = self.conn.cursor()
-
-        cursor.execute(
-            '''
-            INSERT INTO parameter(photoid, name, value)
-            VALUES (?, ?, ?)
-            ''',
-            (
-                parameter.photoid,
-                parameter.name,
-                parameter.value
+        conn = self.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                'INSERT INTO parameter(photoid, name, value) VALUES (?, ?, ?)',
+                (parameter.photoid, parameter.name, parameter.value)
             )
-        )
-
-        self.conn.commit()
-
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+ 
     def findByPhoto(self, photo_id):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            SELECT name, value FROM parameter WHERE photoid = ?
-        """, (photo_id,))
-        
-        rows = cursor.fetchall()
-        parameters = []
-        for row in rows:
-            parameters.append(Parameter(key=row[0], value=row[1]))
-            
-        return parameters
-
+        conn = self.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT name, value FROM parameter WHERE photoid = ?", (photo_id,))
+            rows = cursor.fetchall()
+            parameters = []
+            for row in rows:
+                parameters.append(Parameter(key=row[0], value=row[1]))
+            return parameters
+        finally:
+            cursor.close()
+            conn.close()
+ 
     def deleteByPhoto(self, photoid):
-        cursor = self.conn.cursor()
-
-        cursor.execute(
-            '''
-            DELETE FROM parameter
-            WHERE photoid = ?
-            ''',
-            (photoid,)
-        )
-
-        self.conn.commit()
-
+        conn = self.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('DELETE FROM parameter WHERE photoid = ?', (photoid,))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+ 
     def save(self, photo_id, parameter):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            INSERT INTO parameter (photoid, name, value) 
-            VALUES (?, ?, ?)
-        """, (
-            photo_id, 
-            parameter.key,
-            parameter.value
-        ))
-        self.conn.commit()
+        conn = self.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO parameter (photoid, name, value) VALUES (?, ?, ?)", 
+                (photo_id, parameter.key, parameter.value)
+            )
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
