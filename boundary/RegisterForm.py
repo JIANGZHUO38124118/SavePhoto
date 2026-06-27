@@ -1,4 +1,3 @@
-# boundary/RegisterForm.py
 from PyQt5.QtWidgets import *
 from control.RegisterService import RegisterService 
 
@@ -50,19 +49,17 @@ class RegisterForm(QWidget):
 
         if success:
             QMessageBox.information(self, "Success", "Registration successful!")
-
-            if hasattr(self.parent, 'goLogin'):
-                self.parent.goLogin()  
-            else:
-                self.parent.show()     
-                
-            self.close()
+            self.switchBack()
         else:
-            QMessageBox.critical(self, "Error", "Registration failed.")
+            QMessageBox.critical(self, "Error", "Registration failed. Account already exists!")
 
     def goLogin(self):
+        self.switchBack()
+
+    def switchBack(self):
         if hasattr(self.parent, 'goLogin'):
-            self.parent.goLogin()
+            self.parent.goLogin()  
         else:
             self.parent.show()
+            self.parent.raise_()
         self.close()
