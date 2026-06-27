@@ -1,6 +1,4 @@
 from PyQt5.QtWidgets import *
-
-from boundary.LoginForm import LoginForm
 from boundary.RegisterForm import RegisterForm
 
 

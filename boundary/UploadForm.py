@@ -1,6 +1,5 @@
 import os
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QSize, Qt
 
 from control.UploadService import UploadService
 from entity.Photo import Photo
@@ -29,7 +28,7 @@ class UploadForm(QWidget):
         self.txtFileName.setPlaceholderText("Enter photo name (Required)")
 
         self.txtDate = QLineEdit()
-        self.txtDate.setPlaceholderText("例如：2026年06月27日 (Required)")
+        self.txtDate.setPlaceholderText("xxxx/xx/xx (Required)")
 
         self.paramContainer = QWidget()
         self.paramLayout = QVBoxLayout(self.paramContainer)

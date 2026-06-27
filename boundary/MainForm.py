@@ -1,5 +1,4 @@
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QSize
 from control.LoginService import LoginService
 
 
