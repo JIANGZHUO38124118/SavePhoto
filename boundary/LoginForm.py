@@ -1,47 +1,60 @@
+# boundary/LoginForm.py
 from PyQt5.QtWidgets import *
-
 from control.LoginService import LoginService
-from boundary.MainForm import MainForm
 
 
 class LoginForm(QWidget):
 
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__()
-
-        self.service = LoginService()
+        self.parent = parent
+        self.loginService = LoginService()
 
         self.setWindowTitle("Login")
-        self.resize(300, 200)
+        self.resize(380, 250)
 
-        self.account = QLineEdit()
-        self.password = QLineEdit()
-        self.password.setEchoMode(QLineEdit.Password)
+        self.txtAccount = QLineEdit()
+        self.txtAccount.setPlaceholderText("Enter Account")
 
-        self.btn = QPushButton("Login")
+        self.txtPassword = QLineEdit()
+        self.txtPassword.setEchoMode(QLineEdit.Password)
+        self.txtPassword.setPlaceholderText("Enter Password")
 
-        layout = QFormLayout()
-        layout.addRow("Account", self.account)
-        layout.addRow("Password", self.password)
-        layout.addRow(self.btn)
+        self.btnLogin = QPushButton("Login")
+        self.btnBack = QPushButton("Back")
+
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("<h3>User Login</h3>"))
+        layout.addWidget(self.txtAccount)
+        layout.addWidget(self.txtPassword)
+        layout.addWidget(self.btnLogin)
+        layout.addWidget(self.btnBack)
         self.setLayout(layout)
 
-        self.btn.clicked.connect(self.login)
+        self.btnLogin.clicked.connect(self.login)
+        self.btnBack.clicked.connect(self.goBack)
 
     def login(self):
+        account = self.txtAccount.text().strip()
+        password = self.txtPassword.text().strip()
 
-        user = self.service.login(
-            self.account.text(),
-            self.password.text()
-        )
+        if not account or not password:
+            QMessageBox.warning(self, "Warning", "Please enter account and password.")
+            return
+
+        user = self.loginService.login(account, password)
 
         if user:
-
-            self.main = MainForm(user)
-
-            self.main.show()
-
-            self.close()   # ⭐关键
-
+            QMessageBox.information(self, "Success", f"Welcome, {user.username}!")
+            
+            from boundary.MainForm import MainForm
+            self.mainForm = MainForm(self, user) 
+            self.mainForm.show()
+            self.hide() 
         else:
-            QMessageBox.warning(self, "Error", "Login Failed")
+            QMessageBox.critical(self, "Error", "Invalid account or password.")
+
+    def goBack(self):
+        if self.parent:
+            self.parent.show()
+        self.close()

@@ -95,7 +95,7 @@ class ShowForm(QWidget):
 
         text = ""
         for p in photo.parameter:
-            text += f"{p.name}: {p.value}\n"
+            text += f"{p.key}: {p.value}\n"
         self.parameterLabel.setText(text)
 
     def togglePublic(self):

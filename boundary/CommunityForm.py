@@ -4,6 +4,7 @@ from PyQt5.QtCore import QSize
 
 from control.ShowService import ShowService
 from boundary.ImagePreviewDialog import ImagePreviewDialog
+from entity import Community
 
 
 class CommunityForm(QWidget):
@@ -60,6 +61,16 @@ class CommunityForm(QWidget):
 
         dialog = ImagePreviewDialog(self.photos, row, self)
         dialog.exec_()
+
+    def getPublicPhotos(self) -> Community:
+        raw_public_photos = self.dao.findPublic()
+        
+        from dao.ParameterDAO import ParameterDAO
+        param_dao = ParameterDAO()
+        for photo in raw_public_photos:
+            photo.parameter = param_dao.findByPhoto(photo.photoid)
+            
+        return Community(communityId=1, publicPhotos=raw_public_photos)
 
     def goBack(self):
         self.parent.show()

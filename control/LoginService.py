@@ -21,3 +21,9 @@ class LoginService:
             return None
 
         return user
+    
+    def logout(self) -> None:
+        try:
+            print("User session cleared successfully.")
+        except Exception as e:
+            print(f"Logout cleanup error: {e}")

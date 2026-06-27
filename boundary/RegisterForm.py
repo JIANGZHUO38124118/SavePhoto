@@ -1,43 +1,68 @@
+# boundary/RegisterForm.py
 from PyQt5.QtWidgets import *
-
-from control.RegisterService import RegisterService
-
+from control.RegisterService import RegisterService 
 
 class RegisterForm(QWidget):
 
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__()
-
-        self.service = RegisterService()
+        self.parent = parent
+        self.registerService = RegisterService() 
 
         self.setWindowTitle("Register")
+        self.resize(400, 300)
 
-        self.accountEdit = QLineEdit()
-        self.passwordEdit = QLineEdit()
-        self.usernameEdit = QLineEdit()
+        self.txtAccount = QLineEdit()
+        self.txtAccount.setPlaceholderText("Account")
 
-        self.registerBtn = QPushButton("Register")
+        self.txtPassword = QLineEdit()
+        self.txtPassword.setEchoMode(QLineEdit.Password)
+        self.txtPassword.setPlaceholderText("Password")
 
-        layout = QFormLayout()
+        self.txtUserName = QLineEdit()
+        self.txtUserName.setPlaceholderText("User Name")
 
-        layout.addRow("Account", self.accountEdit)
-        layout.addRow("Password", self.passwordEdit)
-        layout.addRow("Username", self.usernameEdit)
-        layout.addRow(self.registerBtn)
+        self.btnRegister = QPushButton("Register")
+        self.btnBack = QPushButton("Back")
 
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("<h3>Create Account</h3>"))
+        layout.addWidget(self.txtAccount)
+        layout.addWidget(self.txtPassword)
+        layout.addWidget(self.txtUserName)
+        layout.addWidget(self.btnRegister)
+        layout.addWidget(self.btnBack)
         self.setLayout(layout)
 
-        self.registerBtn.clicked.connect(self.register)
+        self.btnRegister.clicked.connect(self.register)
+        self.btnBack.clicked.connect(self.goLogin)
 
     def register(self):
+        account = self.txtAccount.text().strip()
+        password = self.txtPassword.text().strip()
+        username = self.txtUserName.text().strip()
 
-        result = self.service.register(
-            self.accountEdit.text(),
-            self.passwordEdit.text(),
-            self.usernameEdit.text()
-        )
+        if not account or not password or not username:
+            QMessageBox.warning(self, "Warning", "All fields are required!")
+            return
 
-        if result:
-            QMessageBox.information(self, "Success", "Register Success")
+        success = self.registerService.register(account, password, username)
+
+        if success:
+            QMessageBox.information(self, "Success", "Registration successful!")
+
+            if hasattr(self.parent, 'goLogin'):
+                self.parent.goLogin()  
+            else:
+                self.parent.show()     
+                
+            self.close()
         else:
-            QMessageBox.warning(self, "Error", "Account Exists")
+            QMessageBox.critical(self, "Error", "Registration failed.")
+
+    def goLogin(self):
+        if hasattr(self.parent, 'goLogin'):
+            self.parent.goLogin()
+        else:
+            self.parent.show()
+        self.close()

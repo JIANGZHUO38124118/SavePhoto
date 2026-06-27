@@ -26,24 +26,18 @@ class ParameterDAO:
 
         self.conn.commit()
 
-    def findByPhoto(self, photoid):
+    def findByPhoto(self, photo_id):
         cursor = self.conn.cursor()
-
-        cursor.execute(
-            '''
-            SELECT parameterid, photoid, name, value
-            FROM parameter
-            WHERE photoid = ?
-            ''',
-            (photoid,)
-        )
-
+        cursor.execute("""
+            SELECT name, value FROM parameter WHERE photoid = ?
+        """, (photo_id,))
+        
         rows = cursor.fetchall()
-
-        return [
-            Parameter(row[0], row[1], row[2], row[3])
-            for row in rows
-        ]
+        parameters = []
+        for row in rows:
+            parameters.append(Parameter(key=row[0], value=row[1]))
+            
+        return parameters
 
     def deleteByPhoto(self, photoid):
         cursor = self.conn.cursor()
@@ -56,4 +50,16 @@ class ParameterDAO:
             (photoid,)
         )
 
+        self.conn.commit()
+
+    def save(self, photo_id, parameter):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT INTO parameter (photoid, name, value) 
+            VALUES (?, ?, ?)
+        """, (
+            photo_id, 
+            parameter.key,
+            parameter.value
+        ))
         self.conn.commit()

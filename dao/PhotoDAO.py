@@ -21,7 +21,6 @@ class PhotoDAO:
         """, (
             photo.filename,
             photo.filepath,
-            # ⭐ 关键修改：不要直接传 photo.visibility，而是传 photo.visibility.value
             photo.visibility.value, 
             photo.owner
         ))
@@ -107,7 +106,7 @@ class PhotoDAO:
             UPDATE photo
             SET visibility = ?
             WHERE photoid = ?
-        """, (PhotoVisibility.PUBLIC.value, pid))  # ⭐ 确保导入正确后，这里就能完美读取 .value
+        """, (PhotoVisibility.PUBLIC.value, pid))
         self.conn.commit()
 
     def setPrivate(self, pid):
@@ -116,5 +115,5 @@ class PhotoDAO:
             UPDATE photo
             SET visibility = ?
             WHERE photoid = ?
-        """, (PhotoVisibility.PRIVATE.value, pid)) # ⭐ 同上
+        """, (PhotoVisibility.PRIVATE.value, pid))
         self.conn.commit()

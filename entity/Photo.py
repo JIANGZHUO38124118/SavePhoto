@@ -1,7 +1,6 @@
-
 class Photo:
 
-    def __init__(self, photoid, filename, filepath, visibility, owner, parameter=None):
+    def __init__(self, photoid, filename, filepath, visibility, owner, parameter=None, upload_date=None):
         from entity.PhotoVisibility import PhotoVisibility
         
         self.photoid = photoid
@@ -15,6 +14,7 @@ class Photo:
             
         self.owner = owner
         self.parameter = parameter if parameter is not None else []
+        self.upload_date = upload_date
 
     def isPublic(self) -> bool:
         from entity.PhotoVisibility import PhotoVisibility

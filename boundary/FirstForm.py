@@ -24,17 +24,13 @@ class FirstForm(QWidget):
         self.registerBtn.clicked.connect(self.openRegister)
 
     def openLogin(self):
-
-        self.login = LoginForm()
-
-        self.login.show()
-
-        self.close()   # ⭐关键：关闭当前窗口
+        from boundary.LoginForm import LoginForm
+        self.loginForm = LoginForm(self) 
+        self.loginForm.show()
+        
+        self.hide()
 
     def openRegister(self):
-
-        self.register = RegisterForm()
-
-        self.register.show()
-
-        self.close()
+        self.registerForm = RegisterForm(self) 
+        self.registerForm.show()
+        self.hide()

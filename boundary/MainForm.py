@@ -1,42 +1,63 @@
 from PyQt5.QtWidgets import *
-
-from boundary.PersonalForm import PersonalForm
-from boundary.CommunityForm import CommunityForm
+from PyQt5.QtCore import QSize
+from control.LoginService import LoginService
 
 
 class MainForm(QWidget):
 
-    def __init__(self, user):
+    def __init__(self, parent, user):
         super().__init__()
-
+        self.parent = parent
         self.user = user
 
-        self.setWindowTitle("Main Menu")
-        self.resize(400, 300)
+        self.loginService = LoginService()
 
-        self.label = QLabel(f"Welcome {user.username}")
+        self.setWindowTitle(f"Main Menu - {self.user.username}")
+        self.resize(400, 350)
 
-        self.personalBtn = QPushButton("Personal Photos")
-        self.communityBtn = QPushButton("Community")
+        self.btnPersonal = QPushButton("Personal Space")
+        self.btnCommunity = QPushButton("Community")
+        self.btnLogout = QPushButton("Logout")
 
         layout = QVBoxLayout()
-        layout.addWidget(self.label)
-        layout.addWidget(self.personalBtn)
-        layout.addWidget(self.communityBtn)
-
+        layout.addWidget(QLabel(f"<h3>Hello, {self.user.username}!</h3>"))
+        layout.addSpacing(20)
+        layout.addWidget(self.btnPersonal)
+        layout.addWidget(self.btnCommunity)
+        layout.addSpacing(20)
+        layout.addWidget(self.btnLogout)
         self.setLayout(layout)
 
-        self.personalBtn.clicked.connect(self.openPersonal)
-        self.communityBtn.clicked.connect(self.openCommunity)
+        self.btnPersonal.clicked.connect(self.goPersonal)
+        self.btnCommunity.clicked.connect(self.goCommunity)
+        self.btnLogout.clicked.connect(self.logout)
 
-    def openPersonal(self):
-
+    def goPersonal(self):
+        from boundary.PersonalForm import PersonalForm
         self.personalForm = PersonalForm(self, self.user)
         self.personalForm.show()
         self.hide()
 
-    def openCommunity(self):
-
+    def goCommunity(self):
+        from boundary.CommunityForm import CommunityForm
         self.communityForm = CommunityForm(self)
         self.communityForm.show()
         self.hide()
+
+    def logout(self):
+        reply = QMessageBox.question(
+            self, "Logout", "Are you sure you want to log out?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            self.loginService.logout()
+
+            if self.parent:
+                self.parent.show()
+            else:
+                from boundary.FirstForm import FirstForm
+                self.firstForm = FirstForm()
+                self.firstForm.show()
+                
+            self.close()
