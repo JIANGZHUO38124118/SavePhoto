@@ -110,3 +110,8 @@ class PhotoDAO:
         """, (pid,))
 
         self.conn.commit()
+
+    def setPrivate(self, pid):
+        cursor = self.conn.cursor()
+        cursor.execute("UPDATE photo SET visibility=0 WHERE photoid=?", (pid,))
+        self.conn.commit()
