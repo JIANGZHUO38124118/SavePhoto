@@ -39,7 +39,7 @@ class MainForm(QWidget):
 
     def goCommunity(self):
         from boundary.CommunityForm import CommunityForm
-        self.communityForm = CommunityForm(self)
+        self.communityForm = CommunityForm(self, self.user)
         self.communityForm.show()
         self.hide()
 

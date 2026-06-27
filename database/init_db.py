@@ -23,6 +23,16 @@ CREATE TABLE IF NOT EXISTS parameter(
 )
 """)
 
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS likes (
+        userid INTEGER,
+        photoid INTEGER,
+        PRIMARY KEY (userid, photoid),
+        FOREIGN KEY (userid) REFERENCES user(userid) ON DELETE CASCADE,
+        FOREIGN KEY (photoid) REFERENCES photo(photoid) ON DELETE CASCADE
+    );
+""")
+
 conn.commit()
 conn.close()
 

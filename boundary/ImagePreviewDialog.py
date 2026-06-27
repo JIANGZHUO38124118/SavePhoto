@@ -1,116 +1,195 @@
 # boundary/ImagePreviewDialog.py
-from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QFrame
-from PyQt5.QtGui import QPixmap, QFont
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QPixmap, QKeyEvent
 from PyQt5.QtCore import Qt
+from control.ShowService import ShowService
 
 class ImagePreviewDialog(QDialog):
 
-    def __init__(self, photos, current_index, parent=None):
+    def __init__(self, photos, index, user, mode="community", parent=None):
         super().__init__(parent)
         self.photos = photos
-        self.current_index = current_index
+        self.index = index
+        self.user = user
+        self.mode = mode 
+        self.service = ShowService()
 
-        self.resize(1000, 650)
-
-        mainLayout = QHBoxLayout()
-        self.setLayout(mainLayout)
+        self.setWindowTitle("Image Detailed View")
+        self.resize(950, 650)
+        self.setFocusPolicy(Qt.StrongFocus)
 
         self.imageLabel = QLabel()
         self.imageLabel.setAlignment(Qt.AlignCenter)
-        mainLayout.addWidget(self.imageLabel, stretch=3) 
-
-        self.sidePanel = QWidget()
-        self.sidePanel.setFixedWidth(250)
-        panelLayout = QVBoxLayout(self.sidePanel)
-        panelLayout.setAlignment(Qt.AlignTop)
-        panelLayout.setContentsMargins(10, 20, 10, 20)
-
-
-        self.lblTitle = QLabel()
-        font_title = QFont()
-        font_title.setBold(True)
-        font_title.setPointSize(14)
-        self.lblTitle.setFont(font_title)
-        self.lblTitle.setWordWrap(True)
-
-        self.lblDate = QLabel()
-        self.lblDate.setStyleSheet("color: #666666; font-size: 12px;")
-
-
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-        line.setStyleSheet("background-color: #cccccc;")
-
-        self.lblParams = QLabel()
-        self.lblParams.setWordWrap(True)
-        self.lblParams.setAlignment(Qt.AlignTop)
-
-        panelLayout.addWidget(self.lblTitle)
-        panelLayout.addWidget(self.lblDate)
-        panelLayout.addSpacing(10)
-        panelLayout.addWidget(line)
-        panelLayout.addSpacing(10)
-        panelLayout.addWidget(QLabel("<b>Technical Specs:</b>"))
-        panelLayout.addWidget(self.lblParams)
-
-        mainLayout.addWidget(self.sidePanel, stretch=1)
-
-        self.updateImage()
-
-    def updateImage(self):
-        if not (0 <= self.current_index < len(self.photos)):
-            return
+        self.imageLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
-        photo = self.photos[self.current_index]
+        self.publisherLabel = QLabel("Publisher: -")
+        self.likesLabel = QLabel("Likes:  0")
+        
+        self.likeBtn = QPushButton("Like")
+        self.likeBtn.setFixedWidth(80)
+        
+        self.titleLabel = QLabel("<b>[ Photo Name ]</b>") 
+        self.titleLabel.setWordWrap(True)
+        self.titleLabel.setStyleSheet("font-size: 14px; color: #333333;")
+        
+        self.paramTitle = QLabel("<b>[ Technical Parameters ]</b>")
+        self.paramText = QTextEdit()
+        self.paramText.setReadOnly(True) 
+        self.paramText.setFixedWidth(240) 
+        self.paramText.setFocusPolicy(Qt.NoFocus)
 
-        self.setWindowTitle(f"Preview - {photo.filename}")
-        self.lblTitle.setText(photo.filename)
+        self.editParamBtn = QPushButton("Edit Parameters")
+        self.statusBtn = QPushButton("Make Public")
+        self.statusBtn.setStyleSheet("font-weight: bold;")
 
-        upload_date = "Unknown Date"
+        mainLayout = QHBoxLayout()
+        
+        leftLayout = QVBoxLayout()
+        leftLayout.addWidget(self.imageLabel, 1) 
+        
+        socialLayout = QHBoxLayout()
+        socialLayout.addWidget(self.publisherLabel)
+        socialLayout.addSpacing(30)
+        socialLayout.addWidget(self.likesLabel)
+        socialLayout.addSpacing(15)
+        socialLayout.addWidget(self.likeBtn) 
+        socialLayout.addStretch() 
+        leftLayout.addLayout(socialLayout)
+
+        rightLayout = QVBoxLayout()
+        rightLayout.addWidget(self.titleLabel) 
+        rightLayout.addSpacing(15)
+        rightLayout.addWidget(self.paramTitle)
+        rightLayout.addWidget(self.paramText, 1) 
+        rightLayout.addWidget(self.editParamBtn) 
+        rightLayout.addWidget(self.statusBtn)
+        
+        mainLayout.addLayout(leftLayout, 1) 
+        mainLayout.addLayout(rightLayout)
+        self.setLayout(mainLayout)
+
+        self.updateContent()
+
+        self.likeBtn.clicked.connect(self.doLike)
+        self.editParamBtn.clicked.connect(self.doEditParam)
+        self.statusBtn.clicked.connect(self.doToggleStatus)
+
+    def updateContent(self):
+        photo = self.photos[self.index]
+
+        if self.mode == "community":
+            self.likeBtn.show()
+            self.editParamBtn.hide()
+            self.statusBtn.hide()
+            
+            import sqlite3
+            conn = sqlite3.connect("database/photo.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 FROM likes WHERE userid = ? AND photoid = ?", (self.user.userid, photo.photoid))
+            is_user_liked = cursor.fetchone() is not None
+            cursor.close()
+            conn.close()
+
+            if is_user_liked:
+                self.likeBtn.setText("Liked")
+            else:
+                self.likeBtn.setText("Like")
+        else:
+            self.likeBtn.hide()
+            self.editParamBtn.show()
+            self.statusBtn.show()
+
+            if photo.isPublic():
+                self.statusBtn.setText("Set to Private")
+            else:
+                self.statusBtn.setText("Set to Public")
+
+        self.titleLabel.setText(f"<b>File Name:</b><br>{photo.filename}")
+        
+        pixmap = QPixmap(photo.filepath)
+        if not pixmap.isNull():
+            self.imageLabel.setPixmap(pixmap.scaled(920, 820, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        else:
+            self.imageLabel.setText("Failed to load image.")
+
+        if hasattr(photo, 'owner_account') and photo.owner_account:
+            self.publisherLabel.setText(f"<b>Publisher:</b> {photo.owner_account}")
+        else:
+            self.publisherLabel.setText("<b>Publisher:</b> My Storage")
+
+        likes = getattr(photo, 'likes_count', 0)
+        self.likesLabel.setText(f"<b>Likes:</b> {likes}")
+
+        self.refreshParamText(photo)
+        self.setFocus()
+
+    def refreshParamText(self, photo):
+        param_info = ""
         if photo.parameter:
             for p in photo.parameter:
-                if p.key == "Upload Date":
-                    upload_date = p.value
-                    break
+                param_info += f"• {p.key}:\n  {p.value}\n\n"
+        else:
+            param_info = "No technical parameters found for this photo."
+        self.paramText.setPlainText(param_info)
 
-        self.lblDate.setText(f"Uploaded: {upload_date}")
+    def doToggleStatus(self):
+        photo = self.photos[self.index]
+        from entity.PhotoVisibility import PhotoVisibility
+        
+        if photo.isPublic():
+            success = self.service.unpublishPhoto(photo.photoid)
+            if success:
+                photo.visibility = PhotoVisibility.PRIVATE
+                QMessageBox.information(self, "Success", "Photo is now Private.")
+        else:
+            success = self.service.publishPhoto(photo.photoid)
+            if success:
+                photo.visibility = PhotoVisibility.PUBLIC
+                QMessageBox.information(self, "Success", "Photo is now Public.")
+        
+        self.updateContent()
 
+    def doLike(self):
+        photo = self.photos[self.index]
+        is_liked, message = self.service.toggleLikePhoto(self.user.userid, photo.photoid)
+        if hasattr(photo, 'likes_count'):
+            photo.likes_count = photo.likes_count + 1 if is_liked else photo.likes_count - 1
+        QMessageBox.information(self, "Notice", message)
+        self.updateContent()
 
+    def doEditParam(self):
+        photo = self.photos[self.index]
         if not photo.parameter:
-            self.lblParams.setText("<i style='color:gray;'>No extra parameters.</i>")
-        else:
-            param_text = ""
-            for p in photo.parameter:
-                if p.key == "Upload Date":
-                    continue
-                param_text += f"<p><b>{p.key}:</b> {p.value}</p>"
+            QMessageBox.information(self, "Notice", "This photo has no parameters to edit.")
+            return
+
+        keys = [p.key for p in photo.parameter]
+        key, ok1 = QInputDialog.getItem(self, "Select Parameter", "Which parameter do you want to change?", keys, 0, False)
+        
+        if ok1 and key:
+            old_value = next((p.value for p in photo.parameter if p.key == key), "")
+            new_value, ok2 = QInputDialog.getText(self, f"Edit {key}", f"Enter new value for {key}:", text=old_value)
             
-            if not param_text.strip():
-                param_text = "<i style='color:gray;'>No extra parameters.</i>"
-                
-            self.lblParams.setText(param_text)
+            if ok2 and new_value.strip():
+                success = self.service.updatePhotoParameter(photo.photoid, key, new_value.strip())
+                if success:
+                    QMessageBox.information(self, "Success", f"{key} updated successfully!")
+                    for p in photo.parameter:
+                        if p.key == key:
+                            p.value = new_value.strip()
+                            break
+                    self.refreshParamText(photo)
+                else:
+                    QMessageBox.critical(self, "Error", "Failed to update parameter.")
 
-        pixmap = QPixmap(photo.filepath)
-        if pixmap.isNull():
-            self.imageLabel.setText("Image not found")
-        else:
-            scaled_pixmap = pixmap.scaled(
-                700, 
-                600, 
-                Qt.KeepAspectRatio, 
-                Qt.SmoothTransformation
-            )
-            self.imageLabel.setPixmap(scaled_pixmap)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Escape:
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key_Left and self.index > 0:
+            self.index -= 1
+            self.updateContent()
+        elif event.key() == Qt.Key_Right and self.index < len(self.photos) - 1:
+            self.index += 1
+            self.updateContent()
+        elif event.key() == Qt.Key_Escape:
             self.close()
-        elif event.key() == Qt.Key_Left:
-            self.current_index = (self.current_index - 1) % len(self.photos)
-            self.updateImage()
-        elif event.key() == Qt.Key_Right:
-            self.current_index = (self.current_index + 1) % len(self.photos)
-            self.updateImage()
         else:
             super().keyPressEvent(event)
