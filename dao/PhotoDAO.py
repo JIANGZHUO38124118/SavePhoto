@@ -1,4 +1,5 @@
 import sqlite3
+from entity.PhotoVisibility import PhotoVisibility
 from entity.Photo import Photo
 from dao.ParameterDAO import ParameterDAO
 
@@ -20,7 +21,8 @@ class PhotoDAO:
         """, (
             photo.filename,
             photo.filepath,
-            photo.visibility,
+            # ⭐ 关键修改：不要直接传 photo.visibility，而是传 photo.visibility.value
+            photo.visibility.value, 
             photo.owner
         ))
 
@@ -65,8 +67,8 @@ class PhotoDAO:
         cursor.execute("""
             SELECT photoid, filename, filepath, visibility, owner
             FROM photo
-            WHERE visibility=1
-        """)
+            WHERE visibility=?
+        """, (PhotoVisibility.PUBLIC.value,))
 
         rows = cursor.fetchall()
 
@@ -100,18 +102,19 @@ class PhotoDAO:
         self.conn.commit()
 
     def setPublic(self, pid):
-
         cursor = self.conn.cursor()
-
         cursor.execute("""
             UPDATE photo
-            SET visibility=1
-            WHERE photoid=?
-        """, (pid,))
-
+            SET visibility = ?
+            WHERE photoid = ?
+        """, (PhotoVisibility.PUBLIC.value, pid))  # ⭐ 确保导入正确后，这里就能完美读取 .value
         self.conn.commit()
 
     def setPrivate(self, pid):
         cursor = self.conn.cursor()
-        cursor.execute("UPDATE photo SET visibility=0 WHERE photoid=?", (pid,))
+        cursor.execute("""
+            UPDATE photo
+            SET visibility = ?
+            WHERE photoid = ?
+        """, (PhotoVisibility.PRIVATE.value, pid)) # ⭐ 同上
         self.conn.commit()

@@ -37,25 +37,20 @@ class CommunityForm(QWidget):
 
         self.backBtn.clicked.connect(self.goBack)
 
-        # 双击查看大图
         self.listWidget.itemDoubleClicked.connect(
             self.showImage
         )
 
     def loadData(self):
-
-        self.photos = self.service.getPublicPhotos()
-
+        community_data = self.service.getPublicPhotos()
+        
+        self.photos = community_data.getPublicPhotos()
+        
         self.listWidget.clear()
-
         for p in self.photos:
-
             item = QListWidgetItem()
-
             item.setText(p.filename)
-
             item.setIcon(QIcon(p.filepath))
-
             self.listWidget.addItem(item)
 
     def showImage(self):
@@ -63,10 +58,9 @@ class CommunityForm(QWidget):
         if row < 0:
             return
 
-        # ⭐ 传入完整的照片列表和当前点击的索引位置
         dialog = ImagePreviewDialog(self.photos, row, self)
         dialog.exec_()
 
     def goBack(self):
-        self.parent.show()  # 显示主菜单 MainForm
+        self.parent.show()
         self.close()
