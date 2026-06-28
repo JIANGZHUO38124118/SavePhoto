@@ -64,11 +64,41 @@ PhotoCommunity
 
 ## 必要パッケージ
 
+本プログラムは Python 仮想環境（venv）の利用を推奨する。
+
+### ① 仮想環境の作成
+
+```bash
+python -m venv venv
+```
+
+### ② 仮想環境の有効化
+
+**Windows（PowerShell）**
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+**Windows（Command Prompt）**
+
+```cmd
+venv\Scripts\activate.bat
+```
+
+### ③ 必要パッケージのインストール
+
 ```bash
 pip install PyQt5
 ```
 
-SQLiteはPython標準ライブラリを使用しているため、追加インストールは不要。
+または `requirements.txt` を使用する場合：
+
+```bash
+pip install -r requirements.txt
+```
+
+SQLite は Python 標準ライブラリを使用しているため、追加インストールは不要である。
 
 ---
 
@@ -99,6 +129,14 @@ python main.py
 ```
 
 起動すると **First Page** が表示される。
+
+---
+
+## 注意事項
+
+- 本プロジェクトには仮想環境（venv）は含まれていない。
+- プログラムを実行する前に、各自の環境で仮想環境を作成し、必要パッケージをインストールすること。
+- PyQt5 の実行環境によっては、プロジェクトを日本語などのマルチバイト文字を含むフォルダに配置すると、Qt プラグインの読み込みエラーが発生する場合がある。その場合は、英数字のみのフォルダ（例：`C:\Projects\PhotoCommunity`）へ移動して実行することを推奨する。
 
 ---
 
